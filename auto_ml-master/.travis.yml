@@ -1,0 +1,33 @@
+dist: trusty
+sudo: false
+language: python
+
+cache: pip
+
+env:
+  - TESTS_TO_RUN=tests/advanced_tests/automated_tests_regressors.py
+  - TESTS_TO_RUN=tests/advanced_tests/automated_tests.py
+  - TESTS_TO_RUN=tests/advanced_tests/advanced_install_tests.py
+  - TESTS_TO_RUN=tests/core_tests
+
+python:
+  - "2.7"
+  - "3.6"
+
+matrix:
+  include:
+    - python: '2.7'
+      env: TESTS_TO_RUN=tests/backwards_compatibility_tests/backwards_compatibility_test.py
+
+
+install:
+  - TEST_DIR=$PWD
+  - pip install --upgrade pip setuptools wheel
+  - pip install coveralls nose tables
+  - pip install -r requirements.txt
+  - if [[ $TESTS_TO_RUN == *'advanced_tests'* ]]; then pip install lightgbm keras==2.1.1 tensorflow==1.4.0 catboost xgboost; fi
+  - if [[ $TESTS_TO_RUN == *'backwards_compatibility_test'* ]]; then pip install scikit-learn==0.18.0; fi
+
+script:
+  - nosetests $TESTS_TO_RUN
+  - coveralls
