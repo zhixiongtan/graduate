@@ -2,18 +2,16 @@ from autoTZX import utils
 
 
 
+class autoProcess(object):
 
-class mainAuto(object):
-
-    def __init__(self, estimatorType, dataDescriptions, verbose=True):
-        if estimatorType.lower in ['regressor', 'regression']:
-            self.estimatorType = 'regressor'
-        elif estimatorType.lower in ['classifier','classification']:
-            self.estimatorType = 'classifier'
+    def __init__(self, estimatorType, dataDescriptions, multiDefaultModel=False, verbose=True):
+        if estimatorType == 'classifier' or estimatorType == 'regressor':
+            self.estimatorType = estimatorType
         else:
             raise ValueError('Invalid value for estimator, please choose regressor or classifier instead')
         self.dataDescriptions = dataDescriptions
         self.verbose = verbose
+        self.multiDefaultModel = multiDefaultModel
 
 
     def valideDataDescriptions(self):
@@ -31,9 +29,61 @@ class mainAuto(object):
             raise ValueError('make sure excatly one column has the value OUTPUT for model training')
 
 
+    def defaultEstimator(self):
+        if self.estimatorType == 'regressor':
+            baseEstimator = ['GradientBoostingRegressor']
+
+            if self.multiDefaultModel == True:
+                baseEstimator.append('RANSACRegressor')
+                baseEstimator.append('RandomForestRegressor')
+                baseEstimator.append('LinearRegression')
+                baseEstimator.append('AdaBoostRegressor')
+                baseEstimator.append('ExtraTreesRegressor')
+                return baseEstimator
+            else:
+                return baseEstimator
+
+        elif self.estimatorType == 'classifier':
+            baseEstimator = ['GradientBoostingClassifier']
+            if self.multiDefaultModel == True:
+                baseEstimator.append('LogisticRegression')
+                baseEstimator.append('RandomForestClassifier')
+                return baseEstimator
+            else:
+                return baseEstimator
+
+        else:
+            raise ('TypeError: type of estimator must be either classifier or regressor')
+
+
+
+
+    def prepareData(self, data):
+        self.valideDataDescriptions()
+        if len(self.ignoreColumns)>0:
+            X_train = utils.dropIgnoreColumns(data, self.ignoreColumns)
+
+        X_train = utils.dropNaNTarget(X_train, self.outColumn)
+        X_train = utils.dropDuplicateColumns(X_train)
+        y_train = X_train[self.outColumn]
+        X_train.drop(self.outColumn, axis=1, inplace=True)
+        y_train = utils.transformY(self.estimatorType, y_train)
+
+        return X_train, y_train
+
+
+
     def constructPipline(self, Model='LogisticRegression', featureLearning=False, HPSearch=False):
         pipLine = []
         pipLine.append(('basicDataTransform',utils.BasicDatacleaning()))
+
+
+    def train(self, data, model=None, score=False, optimizeModel=False):
+        X_train, y_train = self.prepareData(data)
+        self.model = model
+        if self.model == None:
+            self.model = self.defaultEstimator()
+
 
 
 
