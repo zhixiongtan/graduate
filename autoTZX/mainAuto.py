@@ -78,11 +78,37 @@ class autoProcess(object):
         pipLine.append(('basicDataTransform',utils.BasicDatacleaning()))
 
 
+    def fitSinglePipline(self,X, y):
+        # placeholder for fucntion
+
+    def fitModelSearch(self,X, y, searchModel):
+
+
+
+
+    def trainEstimator(self, modelNames, X, y):
+        if len(modelNames) == 1:
+            trainFinalModel = self.fitSinglePipline(X, y)
+
+        elif len(modelNames)>1 and self.optimizeModel == False:
+            searchModel = {}
+            ModelWithParams = map(utils.mapModels, modelNames)
+            searchModel['model'] = list(ModelWithParams)
+            self.searchModel = searchModel
+            searchResult = self.fitModelSearch(X, y, searchModel)
+            trainFinalModel = searchResult.best_estimator_
+
+
+
     def train(self, data, model=None, score=False, optimizeModel=False):
         X_train, y_train = self.prepareData(data)
         self.model = model
         if self.model == None:
             self.model = self.defaultEstimator()
+
+        #main logic
+
+        self.finalModel = self.trainEstimator(self.model, X_train, y_train)
 
 
 
